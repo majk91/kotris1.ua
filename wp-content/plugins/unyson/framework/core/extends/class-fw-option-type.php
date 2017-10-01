@@ -69,6 +69,15 @@ abstract class FW_Option_Type
 	abstract protected function _get_defaults();
 
 	/**
+	 * Put data for to be accessed in JavaScript for each option type instance
+	 */
+	protected function _get_data_for_js($id, $option, $data = array()) {
+		return array(
+			'option' => $option
+		);
+	}
+
+	/**
 	 * Prevent execute enqueue multiple times
 	 * @var bool
 	 */
@@ -188,7 +197,23 @@ abstract class FW_Option_Type
 
 		$this->enqueue_static($id, $option, $data);
 
-		return $this->_render( $id, $this->load_callbacks( $option ), $data );
+		$html_attributes = array(
+			'class' => 'fw-backend-option-descriptor',
+			'data-fw-option-id' => $id,
+			'data-fw-option-type' => $option['type']
+		);
+
+		$data_for_js = $this->_get_data_for_js($id, $option, $data);
+
+		if ($data_for_js) {
+			$html_attributes['data-fw-for-js'] = json_encode($data_for_js);
+		}
+
+		return fw_html_tag(
+			'div',
+			$html_attributes,
+			$this->_render( $id, $this->load_callbacks( $option ), $data )
+		);
 	}
 
 	/**
@@ -232,7 +257,7 @@ abstract class FW_Option_Type
 				wp_enqueue_script(
 					'fw-option-types',
 					fw_get_framework_directory_uri('/static/js/option-types.js'),
-					array('fw-events', 'qtip'),
+					array('fw-events', 'qtip', 'fw-reactive-options'),
 					fw()->manifest->get_version(),
 					true
 				);
@@ -311,6 +336,16 @@ abstract class FW_Option_Type
 	public function _get_backend_width_type()
 	{
 		return 'fixed';
+	}
+
+	/**
+	 * a general purpose 'label' => false | true from options.php
+	 * @return bool | string
+	 *
+	 * @since 2.7.1
+	 */
+	public function _default_label($id, $option) {
+		return fw_id_to_title($id);
 	}
 
 	/**

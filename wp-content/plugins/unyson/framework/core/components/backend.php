@@ -189,6 +189,7 @@ final class _FW_Component_Backend {
 			{
 				add_action('wp_ajax_fw_backend_options_render', array($this, '_action_ajax_options_render'));
 				add_action('wp_ajax_fw_backend_options_get_values', array($this, '_action_ajax_options_get_values'));
+				add_action('wp_ajax_fw_backend_options_get_values_json', array($this, '_action_ajax_options_get_values_json'));
 			}
 		}
 
@@ -294,7 +295,7 @@ final class _FW_Component_Backend {
 		wp_register_script(
 			'fw-events',
 			fw_get_framework_directory_uri( '/static/js/fw-events.js' ),
-			array( 'backbone' ),
+			array(),
 			fw()->manifest->get_version(),
 			true
 		);
@@ -333,6 +334,45 @@ final class _FW_Component_Backend {
 				fw_get_framework_directory_uri( '/static/css/fw.css' ),
 				array( 'qtip' ),
 				fw()->manifest->get_version()
+			);
+
+			wp_register_script(
+				'fw-reactive-options-registry',
+				fw_get_framework_directory_uri(
+					'/static/js/fw-reactive-options-registry.js'
+				),
+				array('fw', 'fw-events'),
+				false
+			);
+
+			wp_register_script(
+				'fw-reactive-options-simple-options',
+				fw_get_framework_directory_uri(
+					'/static/js/fw-reactive-options-simple-options.js'
+				),
+				array('fw', 'fw-events', 'fw-reactive-options-undefined-option'),
+				false
+			);
+
+			wp_register_script(
+				'fw-reactive-options-undefined-option',
+				fw_get_framework_directory_uri(
+					'/static/js/fw-reactive-options-undefined-option.js'
+				),
+				array(
+					'fw', 'fw-events', 'fw-reactive-options-registry'
+				),
+				false
+			);
+
+			wp_register_script(
+				'fw-reactive-options',
+				fw_get_framework_directory_uri('/static/js/fw-reactive-options.js'),
+				array(
+					'fw', 'fw-events', 'fw-reactive-options-undefined-option',
+					'fw-reactive-options-simple-options'
+				),
+				false
 			);
 
 			wp_register_script(
@@ -381,7 +421,7 @@ final class _FW_Component_Backend {
 			wp_register_script(
 				'fw-backend-options',
 				fw_get_framework_directory_uri( '/static/js/backend-options.js' ),
-				array( 'fw', 'fw-events', 'postbox', 'jquery-ui-tabs' ),
+				array( 'fw', 'fw-events', 'fw-reactive-options', 'postbox', 'jquery-ui-tabs' ),
 				fw()->manifest->get_version(),
 				true
 			);
@@ -1147,7 +1187,11 @@ final class _FW_Component_Backend {
 				) );
 			}
 
-			$options = json_decode( FW_Request::POST( 'options' ), true );
+			$options = FW_Request::POST( 'options' );
+
+			if (is_string( $options )) {
+				$options = json_decode( FW_Request::POST( 'options' ), true );
+			}
 
 			if ( ! $options ) {
 				wp_send_json_error( array(
@@ -1169,6 +1213,68 @@ final class _FW_Component_Backend {
 			'values' => fw_get_options_values_from_input(
 				$options,
 				FW_Request::POST( fw_html_attr_name_to_array_multi_key( $name_prefix ), array() )
+			)
+		) );
+	}
+
+	/**
+	 * Get options values from html generated with 'fw_backend_options_render' ajax action
+	 *
+	 * POST vars:
+	 * - options: '[{option_id: {...}}, {option_id: {...}}, ...]' // Required // String JSON
+	 * - values: {option_id: {...}}
+	 *
+	 * Tip: Inside form html, add: <input type="hidden" name="options" value="[...json...]">
+	 */
+	public function _action_ajax_options_get_values_json() {
+		// options
+		{
+			if ( ! isset( $_POST['options'] ) ) {
+				wp_send_json_error( array(
+					'message' => 'No options'
+				) );
+			}
+
+			$options = FW_Request::POST( 'options' );
+
+			if (is_string( $options )) {
+				$options = json_decode( FW_Request::POST( 'options' ), true );
+			}
+
+			if ( ! $options ) {
+				wp_send_json_error( array(
+					'message' => 'Wrong options'
+				) );
+			}
+		}
+
+		// values
+		{
+			if ( ! isset( $_POST['values'] ) ) {
+				wp_send_json_error( array(
+					'message' => 'No values'
+				) );
+			}
+
+			$values = FW_Request::POST( 'values' );
+
+			if (is_string( $values )) {
+				$values = json_decode( FW_Request::POST( 'values' ), true );
+			}
+
+			if (! is_array($values)) {
+				if ( ! $values ) {
+					wp_send_json_error(array(
+						'message' => 'Wrong values'
+					));
+				}
+			}
+		}
+
+		wp_send_json_success( array(
+			'values' => fw_get_options_values_from_input(
+				$options,
+				$values
 			)
 		) );
 	}

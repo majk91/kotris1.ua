@@ -159,6 +159,18 @@ The `SLIDE STYLE` settings are the style settings for each individual slide with
 = 2.0.10 =
 * Minor Bug Fix
 
+= 2.0.11 =
+* Bug Fix - Before generating Slide Anything JavaScript code, check if jQuery has been loaded loaded. If not, then 'Enqueue' jQuery script
+
+= 2.0.12 =
+* Bug Fix - Changed the location where the jQuery script is enqueued
+
+= 2.0.13 =
+* Bug Fix - Fixed a clash with the 'Envira Gallery' plugin
+
+= 2.0.14 =
+* Fix for using shortcodes inside of anything that already hooks into 'the_content'
+
 == Upgrade Notice ==
 
 = 1.0 =
@@ -230,3 +242,15 @@ The `SLIDE STYLE` settings are the style settings for each individual slide with
 
 = 2.0.10 =
 * Minor Bug Fix
+
+= 2.0.11 =
+* Bug Fix - Before generating Slide Anything JavaScript code, check if jQuery has been loaded loaded. If not, then 'Enqueue' jQuery script
+
+= 2.0.12 =
+* Bug Fix - Changed the location where the jQuery script is enqueued
+
+= 2.0.13 =
+* Bug Fix - Fixed a clash with the 'Envira Gallery' plugin
+
+= 2.0.14 =
+* Fix for using shortcodes inside of anything that already hooks into 'the_content'

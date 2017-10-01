@@ -24,7 +24,7 @@ $increment_placeholder = '###-addable-popup-increment-'. fw_rand_md5() .'-###';
 	)); ?>
 	<div class="items-wrapper">
 		<?php foreach ($data['value'] as $key => $value): ?>
-			<div class="item">
+			<div class="item fw-backend-options-virtual-context">
 				<div class="input-wrapper">
 					<?php echo fw()->backend->option_type('hidden')->render('', array('value' => json_encode($value)), array(
 						'id_prefix' => $data['id_prefix'] . $id . '-' . $key . '-',
@@ -35,10 +35,11 @@ $increment_placeholder = '###-addable-popup-increment-'. fw_rand_md5() .'-###';
 
 				<div class="content"><!-- will be populated from js --></div>
 				<a href="#" class="dashicons fw-x delete-item"></a>
+				<small class="dashicons dashicons-admin-page clone-item" title="<?php echo __('Clone','fw') ?>"></small>
 			</div>
 		<?php endforeach; ?>
 	</div>
-	<div class="default-item">
+	<div class="default-item fw-backend-options-virtual-context">
 		<div class="input-wrapper">
 			<?php echo fw()->backend->option_type('hidden')->render('', array('value' => '[]'), array(
 				'id_prefix' => $data['id_prefix'] . $id . '-' . $increment_placeholder,
@@ -49,6 +50,7 @@ $increment_placeholder = '###-addable-popup-increment-'. fw_rand_md5() .'-###';
 
 		<div class="content"></div>
 		<a href="#" class="dashicons fw-x delete-item"></a>
+		<small class="dashicons dashicons-admin-page clone-item" title="<?php echo __('Clone','fw') ?>"></small>
 	</div>
 	<?php
 	echo fw_html_tag('button', array(

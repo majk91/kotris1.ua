@@ -1,7 +1,7 @@
 (function ($) {
 	var xhr,
 		optionsCache = {},
-		ajaxAutocompleteCallback = _.throttle(function(selectize, value, population, source, hash){
+		ajaxAutocompleteCallback = _.throttle(function(selectize, value, population, source, show_type, hash){
 			selectize.load(function(callback){
 				xhr && xhr.abort();
 
@@ -12,7 +12,8 @@
 						data: {
 							string: value,
 							type: population,
-							names: source
+							names: source,
+							"show-type": show_type,
 						}
 					},
 					function (response) {
@@ -24,10 +25,10 @@
 
 						callback(response.data);
 
-						optionsCache[hash] = []; // transform object to array
-						$.each(selectize.options, function(i, o){
-							optionsCache[hash].push(o);
-						});
+            optionsCache[hash] = [] // transform object to array
+            $.each(selectize.options, function (i, o) {
+              optionsCache[hash].push(o)
+            })
 					}
 				);
 			});
@@ -35,12 +36,12 @@
 
 	function init() {
 		var $this = $(this);
-
 		$this.one('fw:option-type:multi-select:init', function () {
 			var population = $this.attr('data-population'),
 				source = $this.attr('data-source'),
+				show_type = !!parseInt($this.attr('data-show-type')),
 				limit = parseInt($this.attr('data-limit')),
-				hash = fw.md5(JSON.stringify([population, source])),
+				hash = fw.md5(JSON.stringify([population, source, show_type])),
 				options = (
 					typeof optionsCache[hash] == 'undefined'
 						? JSON.parse($this.attr('data-options'))
@@ -49,18 +50,31 @@
 
 			$this.selectize({
 				maxItems: ( limit > 0 ) ? limit : null,
+				plugins: ['remove_button','drag_drop'],
 				delimiter: '/*/',
 				valueField: 'val',
 				labelField: 'title',
 				searchField: 'title',
 				options: options,
 				create: false,
+				render: {
+          option: function (item) {
+            var title = '<span class="title">' + item.title + '</span>'
+            var type = item.type !== undefined ? '<span class="type">' + item.type + '</span>' : ''
+            return '<div>' + title + type + '</div>'
+          },
+					item: function (item) {
+            var title = '<span class="title">' + item.title + '</span>'
+            var type = item.type !== undefined ? '<span class="type">' + item.type + '</span>' : ''
+            return '<div>' + title + type + '</div>'
+          }
+				},
 				onType: function (value) {
 					if (population == 'array' || value.length < 2) {
 						return;
 					}
 
-					ajaxAutocompleteCallback(this, value, population, source, hash);
+					ajaxAutocompleteCallback(this, value, population, source, show_type, hash);
 				}
 			});
 
@@ -73,7 +87,7 @@
 			});
 		});
 
-		if ($this.val().length) { // there are values that needs to be show right away
+		if ($this.val().length || $this.is(':focus')) { // there are values that needs to be show right away
 			$this.trigger('fw:option-type:multi-select:init');
 		} else {
 			$this.one('focus', function(){

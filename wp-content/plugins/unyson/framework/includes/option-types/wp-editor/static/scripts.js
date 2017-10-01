@@ -144,6 +144,8 @@
 		} else {
 			qTagsInit(id, $option, $wrap, $textarea);
 		}
+
+		tinymce.ui.FloatPanel.zIndex = 100100;
 	};
 
 	fwe.on('fw:options:init', function (data) {
@@ -151,6 +153,25 @@
 			.find('.fw-option-type-wp-editor:not(.fw-option-initialized)')
 			.each(init)
 			.addClass('fw-option-initialized');
+	});
+
+	fw.options.register('wp-editor', {
+		startListeningForChanges: function (optionDescriptor) {
+			$(optionDescriptor.el).find('textarea.wp-editor-area')
+				.on('change', function (e) {
+					fw.options.trigger.changeForEl(e.target);
+				});
+		},
+
+		getValue: function (optionDescriptor) {
+			return {
+				value: $(optionDescriptor.el).find(
+					'textarea.wp-editor-area'
+				).val(),
+
+				optionDescriptor: optionDescriptor
+			}
+		}
 	});
 
 })(jQuery, fwEvents);

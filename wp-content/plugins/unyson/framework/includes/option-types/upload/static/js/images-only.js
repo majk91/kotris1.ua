@@ -143,15 +143,23 @@
 
 			fwe.trigger('fw:option-type:upload:clear', {$element: elements.$container});
 			elements.$container.trigger('fw:option-type:upload:clear');
+
+			fw.options.trigger.changeForEl(elements.$container, {
+				value: {}
+			});
+
+			fw.options.trigger.scopedByType('clear', elements.$container, {
+				value: {}
+			});
 		}
 
 		function performSelection (attachment) {
 			var url, filename, compiled;
 
 			if (attachment.get('sizes')) {
-				url = attachment.get('sizes').thumbnail
-						? attachment.get('sizes').thumbnail.url
-						: attachment.get('sizes').full.url;
+				url = _.min(_.values(attachment.get('sizes')), function (size) {
+					return size.width;
+				}).url;
 			} else {
 				url = attachment.get('url');
 			}
@@ -186,6 +194,13 @@
 			elements.$container.trigger('fw:option-type:upload:change', {
 				attachment: attachment
 			});
+
+			fw.options.trigger.changeForEl(elements.$container, {
+				value: {
+					attachment_id: attachment.get('id'),
+					url: attachment.get('url')
+				}
+			});
 		}
 	};
 
@@ -193,6 +208,45 @@
 		data.$elements
 			.find('.fw-option-type-upload.images-only:not(.fw-option-initialized)').each(init)
 			.addClass('fw-option-initialized');
+	});
+
+	fw.options.register('upload', {
+		startListeningForChanges: jQuery.noop,
+		getValue: function (optionDescriptor) {
+			var deferred = $.Deferred();
+
+			var attachmentId = $(optionDescriptor.el).find(
+				'[type="hidden"][name*="' + optionDescriptor.id + '"]'
+			).val()
+
+			if (! attachmentId) {
+				deferred.resolve({
+					value: {},
+					optionDescriptor: optionDescriptor
+				});
+			} else {
+				var attachment = wp.media.attachment(attachmentId);
+
+				if (! attachment.get('url')) {
+					attachment.fetch().then(function () {
+						resolveWithAttachment(attachment);
+					})
+				} else {
+					resolveWithAttachment(attachment)
+				}
+			}
+
+			return deferred;
+
+			function resolveWithAttachment (attachment) {
+				deferred.resolve({
+					value: {
+						attachment_id: attachmentId,
+						url: attachment.get('url')
+					}
+				});
+			}
+		}
 	});
 
 })(jQuery, _, fwEvents);

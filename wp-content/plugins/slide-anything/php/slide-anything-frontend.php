@@ -64,7 +64,7 @@ function slide_anything_shortcode($atts) {
 				}
 				// apply 'the_content' filter to slide content to process any shortcodes
 				if ($slide_data['shortcodes'] == 'true') {
-					$slide_data["slide".$i."_content"] = apply_filters('the_content', $metadata["sa_slide".$i."_content"][0]);
+					$slide_data["slide".$i."_content"] = do_shortcode($metadata["sa_slide".$i."_content"][0]);
 				} else {
 					$slide_data["slide".$i."_content"] = $metadata["sa_slide".$i."_content"][0];
 				}
@@ -412,6 +412,13 @@ function slide_anything_shortcode($atts) {
 						$output .=  "</div>\n";
 					}
 				}
+			}
+
+
+
+			// ### ENQUEUE JQUERY SCRIPT IF IT HAS NOT ALREADY BEEN LOADED ###
+			if (!wp_script_is('jquery', 'done')) {
+				wp_enqueue_script('jquery');
 			}
 
 

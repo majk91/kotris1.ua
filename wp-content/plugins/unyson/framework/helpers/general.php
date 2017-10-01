@@ -421,6 +421,17 @@ function fw_print( $value ) {
 }
 
 /**
+ * Alias for fw_print
+ *
+ * @see fw_print()
+ */
+if ( ! function_exists( 'debug' ) ) {
+	function debug() {
+		call_user_func_array( 'fw_print', func_get_args() );
+	}
+}
+
+/**
  * Generate html tag
  *
  * @param string $tag Tag name
@@ -1313,42 +1324,26 @@ function fw_get_google_fonts_v2() {
  */
 function fw_current_url() {
 	static $url = null;
-
 	if ( $url === null ) {
-		$url = 'http://';
-
-		//https://github.com/ThemeFuse/Unyson/issues/2442
-		$server_wildcard_or_regex = preg_match( '/(^~\^|^\*\.|\.\*$)/', $_SERVER['SERVER_NAME'] );
-
-		if (
-			$_SERVER['SERVER_NAME'] === '_'
-			||
-			1 === $server_wildcard_or_regex
-		) { // https://github.com/ThemeFuse/Unyson/issues/126
-			$url .= $_SERVER['HTTP_HOST'];
+		if ( is_multisite() && ! ( defined( 'SUBDOMAIN_INSTALL' ) && SUBDOMAIN_INSTALL ) ) {
+			switch_to_blog( 1 );
+			$url = get_option( 'home' );
+			restore_current_blog();
 		} else {
-			$url .= $_SERVER['SERVER_NAME'];
+			$url = get_option( 'home' );
 		}
 
-		if ( ! in_array( intval( $_SERVER['SERVER_PORT'] ), array( 80, 443 ) ) ) {
-			$url .= ':' . $_SERVER['SERVER_PORT'];
-		}
+		//Remove the "//" before the domain name
+		$url = ltrim( fw_get_url_without_scheme( $url ), '/' );
 
-		$url .= $_SERVER['REQUEST_URI'];
+		//Remove the ulr subdirectory in case it has one
+		$split = explode( '/', $url );
 
-		$url = set_url_scheme( $url ); // https fix
+		//Remove end slash
+		$url = rtrim( $split[0], '/' );
 
-		if ( is_multisite() ) {
-			if ( defined( 'SUBDOMAIN_INSTALL' ) && SUBDOMAIN_INSTALL ) {
-				$site_url = parse_url( $url );
-
-				if ( isset( $site_url['query'] ) ) {
-					$url = home_url( $site_url['path'] . '?' . $site_url['query'] );
-				} else {
-					$url = home_url( $site_url['path'] );
-				}
-			}
-		}
+		$url .= '/' . ltrim( fw_akg( 'REQUEST_URI', $_SERVER, '' ), '/' );
+		$url = set_url_scheme( '//' . $url ); // https fix
 	}
 
 	return $url;

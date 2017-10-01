@@ -29,7 +29,8 @@
 			//		), fw_html_tag('img',$img_attributes));
 			//	}
 			}
-			echo'" alt=""></div><div class="content-manager-box"><h4 class="content-title">'.$tab['tab_content_title'].'</h4><p >'.do_shortcode( $tab['tab_content'] ) . '</p></div></div></div>';
+			echo'" alt=""></div><div class="content-manager-box"><h4 class="content-title">'.$tab['tab_content_title'].'</h4><p >'.do_shortcode( $tab['tab_content'] ) . '</p><div class="read-more"><a href="kotris1.ua/about_as#managers">Узнать больше ... </a></div></div></div></div>';
 		}
 	?>
 </div>
+

@@ -10,25 +10,32 @@
 					return $defaultItem.clone().removeClass('default-item').addClass('item');
 				}
 			},
+
 			data = JSON.parse(
 				JSON.parse(nodes.$optionWrapper.attr('data-for-js')).join('{{') // check option php class
 			),
+
 			utils = {
 				modal: new fw.OptionsModal({
 					title: data.title,
 					options: data.options,
 					size : data.size
 				}),
+
 				countItems: function () {
 					return nodes.$itemsWrapper.find('> .item').length;
 				},
+
 				removeDefaultItem: function () {
 					nodes.$optionWrapper.find('.default-item:first').remove();
 				},
+
 				toogleNodes : function(){
 					utils.toogleItemsWrapper();
 					utils.toogleAddButton();
+					utils.toogleClone();
 				},
+
 				toogleItemsWrapper: function () {
 
 					if (utils.countItems() === 0) {
@@ -36,7 +43,9 @@
 					} else {
 						nodes.$itemsWrapper.show();
 					}
+
 				},
+
 				toogleAddButton: function(){
 					if(data.limit !== 0 ){
 						(utils.countItems() >= data.limit ) ?
@@ -44,14 +53,24 @@
 							nodes.$addButton.show();
 					}
 				},
+
+				toogleClone: function(){
+					if(data.limit !== 0 ){
+						(utils.countItems() >= data.limit ) ?
+							nodes.$itemsWrapper.addClass('hide-clone') :
+							nodes.$itemsWrapper.removeClass('hide-clone');
+					}
+				},
+
 				init: function () {
 					utils.initItemsTemplates();
 					utils.toogleNodes();
 					utils.removeDefaultItem();
 					utils.initSortable();
 				},
+
 				initSortable: function () {
-					if (!nodes.$optionWrapper.hasClass('is-sortable')) {
+					if (! nodes.$optionWrapper.hasClass('is-sortable')) {
 						return false;
 					}
 
@@ -63,6 +82,7 @@
 						axis: 'y',
 						update: function(){
 							nodes.$optionWrapper.trigger('change'); // for customizer
+							fw.options.trigger.changeForEl(nodes.$optionWrapper);
 						},
 						start: function(e, ui){
 							// Update the height of the placeholder to match the moving item.
@@ -74,31 +94,39 @@
 						}
 					});
 				},
+
 				initItemsTemplates: function () {
 					var $items = nodes.$itemsWrapper.find('> .item');
+
 					if ($items.length > 0) {
 						$items.each(function () {
 							utils.editItem($(this), JSON.parse($(this).find('input').val()));
 						});
 					}
 				},
+
 				createItem: function (values) {
 					var $clonedItem = nodes.getDefaultItem(),
 						$clonedInput = $clonedItem.find('.input-wrapper');
 
 					var $inputTemplate = $(
 						$.trim($clonedInput.html())
-							.split( nodes.$addButton.attr('data-increment-placeholder') ).join(utils.countItems())
+							.split(
+								nodes.$addButton.attr('data-increment-placeholder')
+							)
+							.join(utils.countItems())
 					);
-					$inputTemplate.attr('value', JSON.stringify(values));
 
-					$clonedInput.find('input').replaceWith($inputTemplate);
+					$inputTemplate.find('input').attr('value', JSON.stringify(values));
+
+					$clonedInput.children().first().replaceWith($inputTemplate);
 
 					var template = '';
 
 					try {
 						/**
-						 * may throw error in in template is used an option id added after some items was already saved
+						 * may throw error in in template is used an option id
+						 * added after some items was already saved
 						 */
 						values._context = $clonedItem.find('.content');
 
@@ -119,9 +147,11 @@
 
 					return $clonedItem;
 				},
+
 				addNewItem: function (values) {
 					nodes.$itemsWrapper.append(utils.createItem(values));
 				},
+
 				editItem: function (item, values) {
 					item.replaceWith(utils.createItem(values));
 				}
@@ -132,8 +162,18 @@
 			e.preventDefault();
 			$(this).closest('.item').remove();
 			utils.toogleNodes();
-
 			nodes.$optionWrapper.trigger('change'); // for customizer
+			fw.options.trigger.changeForEl(nodes.$optionWrapper);
+		});
+		
+		nodes.$itemsWrapper.on('click', '.clone-item', function (e) {
+			e.stopPropagation();
+			var $item  = $(this).closest('.item');
+			var $vals  = JSON.parse($($item).find('input').val());
+			utils.addNewItem($vals);
+			utils.toogleNodes();
+			nodes.$optionWrapper.trigger('change'); // for customizer
+			fw.options.trigger.changeForEl(nodes.$optionWrapper);
 		});
 
 		nodes.$itemsWrapper.on('click', '> .item', function (e) {
@@ -167,6 +207,7 @@
 			}
 
 			nodes.$optionWrapper.trigger('change'); // for customizer
+			fw.options.trigger.changeForEl(nodes.$optionWrapper);
 		});
 
 		_.map(
@@ -198,6 +239,49 @@
 		data.$elements
 			.find('.fw-option-type-addable-popup:not(.fw-option-initialized)').each(addablePopup)
 			.addClass('fw-option-initialized');
+	});
+
+	fw.options.register('addable-popup', {
+		getValue: function (optionDescriptor) {
+			var promise = $.Deferred();
+
+			// TODO: refactor that!!!
+			if (jQuery.when.all===undefined) {
+				jQuery.when.all = function(deferreds) {
+					var deferred = new jQuery.Deferred();
+					$.when.apply(jQuery, deferreds).then(
+						function() {
+							deferred.resolve(Array.prototype.slice.call(arguments));
+						},
+						function() {
+							deferred.fail(Array.prototype.slice.call(arguments));
+						});
+
+					return deferred;
+				}
+			}
+
+			jQuery.when.all(
+				$(optionDescriptor.el).find(
+					'> .fw-option-type-addable-popup > .items-wrapper'
+				).first().find(
+					'> .item.fw-backend-options-virtual-context'
+				).toArray().map(fw.options.getContextValue)
+			).then(function (valuesAsArray) {
+				promise.resolve({
+					value: _.map(
+						valuesAsArray,
+						_.compose(JSON.parse, _.first, _.values, _.property('value'))
+					),
+
+					optionDescriptor: optionDescriptor
+				})
+			});
+
+			return promise;
+		},
+
+		startListeningForChanges: $.noop
 	});
 
 })(jQuery, _, fwEvents, window);

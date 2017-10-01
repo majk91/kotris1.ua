@@ -323,22 +323,25 @@ function register_tinymce_button($buttons) {
 	return $buttons;
 }
 function get_tinymce_shortcode_array() {
-	// display 2 javascript arrays (in footer) containing all the slide anything post titles and post ids
-	// these 2 arrays are used to display the shortcode options by the TinyMCE button
-	echo "<script type='text/javascript'>\n";
-	echo "var sa_title_arr = new Array();\n";
-	echo "var sa_id_arr = new Array();\n";
+	$screen = get_current_screen();
+	if ($screen->post_type != 'envira') { // ### BUG FIX - CLASHING WITH ENVIRA GALLERY (VER 2.0.13) ###
+		// display 2 javascript arrays (in footer) containing all the slide anything post titles and post ids
+		// these 2 arrays are used to display the shortcode options by the TinyMCE button
+		echo "<script type='text/javascript'>\n";
+		echo "var sa_title_arr = new Array();\n";
+		echo "var sa_id_arr = new Array();\n";
 
-	$args = array('post_type' => 'sa_slider', 'post_status' => 'publish', 'posts_per_page' => -1);
-	$sa_slider_query = new WP_Query($args);
-	$count = 0;
-	while ($sa_slider_query->have_posts()) : $sa_slider_query->the_post();
-		$title = get_the_title();
-		echo "sa_title_arr[".$count."] = '".$title."';\n";
-		echo "sa_id_arr[".$count."] = '".get_the_ID()."';\n";
-		$count++;
-	endwhile;
-	echo "</script>\n";
+		$args = array('post_type' => 'sa_slider', 'post_status' => 'publish', 'posts_per_page' => -1);
+		$sa_slider_query = new WP_Query($args);
+		$count = 0;
+		while ($sa_slider_query->have_posts()) : $sa_slider_query->the_post();
+			$title = get_the_title();
+			echo "sa_title_arr[".$count."] = '".$title."';\n";
+			echo "sa_id_arr[".$count."] = '".get_the_ID()."';\n";
+			$count++;
+		endwhile;
+		echo "</script>\n";
+	}
 }
 
 

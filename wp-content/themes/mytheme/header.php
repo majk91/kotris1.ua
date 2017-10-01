@@ -18,6 +18,7 @@
 	<link rel="profile" href="http://gmpg.org/xfn/11">
 
 	<link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+	<link rel="stylesheet" href="http://kotris1.ua/wp-content/themes/mytheme/css/font-awesome.min.css">
 
 	<?php wp_head(); ?>
 </head>
@@ -43,7 +44,6 @@
 			<?php
 			endif; ?>
 		</div><!-- .site-branding -->
-
 		<nav id="site-navigation" class="main-navigation">
 			<button class="menu-toggle" aria-controls="primary-menu" aria-expanded="false"><?php esc_html_e( 'Primary Menu', 'mytheme' ); ?></button>
 			<?php
@@ -53,11 +53,23 @@
 				) );
 			?>
 		</nav><!-- #site-navigation -->
+
 		<?php if ( is_active_sidebar( 'custom-header-widget' ) ) : ?>
 		    <div id="header-widget-area" class="chw-widget-area widget-area" role="complementary">
+		    	<div id="big-call"><i class="fa fa-phone" aria-hidden="true"></i></div>
 		<?php dynamic_sidebar( 'custom-header-widget' ); ?>
 		    </div>
 		<?php endif; ?>
+		<div id="mobile-menu-btn"><i class="fa fa-bars" aria-hidden="true"></i></div>
+		<nav id="site-navigation-mobile" class="main-navigation">
+		<!--	<button class="menu-toggle" aria-controls="primary-menu" aria-expanded="false"><?php /* esc_html_e( 'Primary Menu', 'mytheme' ); */?></button> -->
+			<?php
+				wp_nav_menu( array(
+					'theme_location' => 'menu-1',
+					'menu_id'        => 'primary-menu',
+				) );
+			?>
+		</nav><!-- #site-navigation -->
 	</header><!-- #masthead -->
 
 	<div id="content" class="site-content">

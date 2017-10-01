@@ -27,5 +27,10 @@
 
 <?php wp_footer(); ?>
 
+<script type="text/javascript" src="/wp-content/themes/mytheme/js/myJs.js"></script>
+<script type="text/javascript" src="/wp-content/themes/mytheme/js/wow.min.js"></script>
+<script>
+	new WOW().init();
+</script>
 </body>
 </html>
